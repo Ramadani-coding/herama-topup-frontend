@@ -37,11 +37,12 @@ const OrderDetail = () => {
       return alert("Silakan pilih nominal produk terlebih dahulu!");
 
     // 2. Validasi Data Akun (ID & Server)
-    if (!userId) return alert("Masukkan ID anda!");
+    if (!userId) return alert(`Masukkan ${getIdLabel()} anda!`);
 
     const needsServer =
-      category.input_type !== "ID_ONLY" &&
-      category.input_type !== "PHONE_NUMBER";
+      category.input_type === "ID_SERVER" ||
+      category.input_type === "ID_SERVER_DROPDOWN";
+
     if (needsServer && !serverId)
       return alert("Silakan pilih atau masukkan Server anda!");
 
@@ -242,8 +243,6 @@ const OrderDetail = () => {
     }
   };
 
-  const [openCategory, setOpenCategory] = useState("E-Wallet"); // Default membuka E-Wallet
-
   useEffect(() => {
     const fetchDetail = async () => {
       try {
@@ -347,6 +346,7 @@ const OrderDetail = () => {
     if (type === "ID_SERVER_DROPDOWN") return "UUID";
     if (type === "PHONE_NUMBER") return "nomor HP";
     if (gameSlug.includes("valorant")) return "Riot ID";
+    if (gameSlug.includes("league-of-legends-wild-rift")) return "Riot ID";
 
     return "ID";
   };
@@ -647,14 +647,19 @@ const OrderDetail = () => {
                 </div>
 
                 <div
-                  className={`p-6 grid gap-5 ${category.input_type === "ID_ONLY" || category.input_type === "PHONE_NUMBER" ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"}`}
+                  className={`p-6 grid gap-5 ${
+                    // Grid 2 kolom HANYA jika membutuhkan server
+                    category.input_type === "ID_SERVER" ||
+                    category.input_type === "ID_SERVER_DROPDOWN"
+                      ? "grid-cols-1 md:grid-cols-2"
+                      : "grid-cols-1"
+                  }`}
                 >
                   <div className="flex flex-col space-y-2">
-                    <label className="text-[10px] text-slate-500 font-bold ml-1">
+                    <label className="text-[10px] text-slate-500 font-bold ml-1 uppercase tracking-wider">
                       {getIdLabel()}
                     </label>
                     <input
-                      // Gunakan tipe 'tel' dan inputMode 'numeric' untuk UX angka maksimal
                       type={isNumericMode ? "tel" : "text"}
                       inputMode={isNumericMode ? "numeric" : "text"}
                       placeholder={`Masukkan ${getIdLabel()}`}
@@ -664,51 +669,50 @@ const OrderDetail = () => {
                     />
                   </div>
 
-                  {category.input_type !== "ID_ONLY" &&
-                    category.input_type !== "PHONE_NUMBER" && (
-                      <div className="flex flex-col space-y-2">
-                        <label className="text-[10px] text-slate-500 font-bold ml-1">
-                          Server
-                        </label>
+                  {/* KOLOM SERVER: HANYA MUNCUL JIKA TIPENYA ID_SERVER / DROPDOWN */}
+                  {(category.input_type === "ID_SERVER" ||
+                    category.input_type === "ID_SERVER_DROPDOWN") && (
+                    <div className="flex flex-col space-y-2">
+                      <label className="text-[10px] text-slate-500 font-bold ml-1 uppercase tracking-wider">
+                        Server
+                      </label>
 
-                        {category.input_type === "ID_SERVER_DROPDOWN" ? (
-                          /* DROPDOWN SERVER (Genshin Impact, dll) */
-                          <div className="relative">
-                            <select
-                              className="w-full bg-[#0b0e14] border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition-all appearance-none cursor-pointer"
-                              value={serverId}
-                              onChange={(e) => setServerId(e.target.value)}
-                            >
-                              <option value="" disabled>
-                                Pilih server
-                              </option>
-                              {category.server_list?.map((s) => (
-                                <option key={s.value} value={s.value}>
-                                  {s.label}
-                                </option>
-                              ))}
-                            </select>
-                            <HiChevronDown
-                              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
-                              size={18}
-                            />
-                          </div>
-                        ) : (
-                          /* INPUT SERVER MANUAL (Hanya Angka) */
-                          <input
-                            type="tel"
-                            inputMode="numeric"
-                            placeholder="Server"
-                            className="w-full bg-[#0b0e14] border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition-all placeholder:text-slate-700"
+                      {category.input_type === "ID_SERVER_DROPDOWN" ? (
+                        <div className="relative">
+                          <select
+                            className="w-full bg-[#0b0e14] border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition-all appearance-none cursor-pointer"
                             value={serverId}
-                            // Menggunakan logika pembersihan karakter non-angka secara real-time
-                            onChange={(e) =>
-                              setServerId(e.target.value.replace(/[^0-9]/g, ""))
-                            }
+                            onChange={(e) => setServerId(e.target.value)}
+                          >
+                            <option value="" disabled>
+                              Pilih server
+                            </option>
+                            {category.server_list?.map((s) => (
+                              <option key={s.value} value={s.value}>
+                                {s.label}
+                              </option>
+                            ))}
+                          </select>
+                          <HiChevronDown
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+                            size={18}
                           />
-                        )}
-                      </div>
-                    )}
+                        </div>
+                      ) : (
+                        <input
+                          type="tel"
+                          inputMode="numeric"
+                          placeholder="Server"
+                          className="w-full bg-[#0b0e14] border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition-all placeholder:text-slate-700"
+                          value={serverId}
+                          onChange={(e) =>
+                            setServerId(e.target.value.replace(/[^0-9]/g, ""))
+                          }
+                        />
+                      )}
+                    </div>
+                  )}
+
                   <p className="text-[10px] italic text-slate-500 ml-1">
                     {category.placeholder ? category.placeholder : ""}
                   </p>

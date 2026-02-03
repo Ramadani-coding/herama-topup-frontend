@@ -172,11 +172,10 @@ const OrderDetail = () => {
   };
 
   const handleCheckout = async () => {
-    // 1. Validasi input wajib
+    // --- Validasi input tetap sama ---
     if (!selectedProduct) return alert("Pilih nominal produk terlebih dahulu!");
     if (!userId) return alert(`Masukkan ${getIdLabel()} anda!`);
 
-    // Validasi Server ID jika tipe inputnya membutuhkan server
     if (
       category.input_type !== "ID_ONLY" &&
       category.input_type !== "PHONE_NUMBER" &&
@@ -189,7 +188,8 @@ const OrderDetail = () => {
     if (!whatsapp || whatsapp.length < 10)
       return alert("Masukkan nomor WhatsApp yang valid!");
 
-    setIsProcessing(true); // Aktifkan loading
+    setIsProcessing(true);
+    setCheckoutError(null);
 
     try {
       const finalAmount = calculateFinalPrice(
@@ -197,44 +197,48 @@ const OrderDetail = () => {
         selectedPayment,
       );
 
-      // 2. LOGIKA PENGGABUNGAN ID DAN SERVER
-      // Sesuai contoh Postman: ID "68899855" + Server "2123" menjadi "688998552123"
       const combinedCustomerNo = serverId ? `${userId}${serverId}` : userId;
 
       const payload = {
-        sku_code: selectedProduct.sku_code, // Mengirim SKU Code produk
-        customer_no: combinedCustomerNo, // Mengirim gabungan ID + Server
+        sku_code: selectedProduct.sku_code,
+        customer_no: combinedCustomerNo,
         phone_number: whatsapp,
         payment_method: selectedPayment,
         amount: finalAmount,
       };
 
-      // 3. Eksekusi ke Backend
       const response = await api.post("/payment/checkout", payload);
 
       if (response.data.success) {
-        const { snap_token } = response.data.data;
-        // Panggil Snap Midtrans
+        const { snap_token, invoice } = response.data.data; // Pastikan invoice ID diambil dari sini
+
         window.snap.pay(snap_token, {
+          // Callback jika pembayaran berhasil
           onSuccess: (result) => {
-            window.location.href = `/transaction/${response.data.data.invoice}`;
+            window.location.replace(`/transaction/${invoice}`);
           },
+          // Callback jika pembayaran tertunda (misal: sudah dapet kode VA/QRIS tapi belum bayar)
           onPending: (result) => {
-            window.location.href = `/transaction/${response.data.data.invoice}`;
+            window.location.replace(`/transaction/${invoice}`);
           },
+          // Callback jika terjadi error
           onError: (result) => {
-            window.location.href = `/transaction/${response.data.data.invoice}`;
+            window.location.replace(`/transaction/${invoice}`);
           },
-          onClose: (result) => {
-            window.location.href = `/transaction/${response.data.data.invoice}`;
+          // SOLUSI MOBILE: Jika user menutup Snap atau kembali dari aplikasi GoPay
+          onClose: () => {
+            // Menggunakan location.replace agar user tidak bisa 'back' ke halaman checkout yang sudah expired
+            window.location.replace(`/transaction/${invoice}`);
           },
         });
       }
     } catch (err) {
       console.error("Checkout Error:", err);
-      alert(err.response?.data?.message || "Gagal memproses pembayaran");
+      setCheckoutError(
+        err.response?.data?.message || "Gagal memproses pembayaran",
+      );
     } finally {
-      setIsProcessing(false); // Matikan loading
+      setIsProcessing(false);
     }
   };
 
@@ -886,87 +890,101 @@ const OrderDetail = () => {
           </div>
         </div>
       </div>
+      {/* MODAL KONFIRMASI PEMBELIAN */}
       {showConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#161b22] border border-slate-800 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
-            <div className="p-6 space-y-6">
-              <div className="text-center space-y-2">
-                <div className="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto">
-                  <HiDocumentText className="text-cyan-500 text-2xl" />
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-all">
+          <div className="bg-[#161b22] border border-slate-800 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
+            <div className="p-8 space-y-6">
+              {/* Header */}
+              <div className="text-center space-y-3">
+                <div className="w-16 h-16 bg-cyan-500/10 rounded-full flex items-center justify-center mx-auto border border-cyan-500/20">
+                  <HiDocumentText className="text-cyan-500 text-3xl" />
                 </div>
-                <h3 className="text-white font-bold text-lg">Detail Pesanan</h3>
+                <h3 className="text-white font-black text-2xl uppercase tracking-tight">
+                  Detail Pesanan
+                </h3>
                 <p className="text-slate-500 text-[10px]">
                   Mohon periksa kembali detail pesanan Anda sebelum melanjutkan.
                 </p>
               </div>
 
-              {/* DETAIL PEMBELIAN (TETAP DI PERTAHANKAN) */}
-              <div className="space-y-4 border-y border-slate-800/50 py-4">
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-500">Nickname</span>
-                  <span className="text-white font-bold">
+              {/* Data Detail (Tetap Dipertahankan) */}
+              <div className="space-y-4 border-y border-slate-800/50 py-5">
+                <div className="flex justify-between items-start gap-4">
+                  <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                    Nickname
+                  </span>
+                  {/* Perbaikan break-all untuk teks panjang */}
+                  <span className="text-white font-black text-[11px] text-right leading-tight break-all max-w-[65%]">
                     {confirmationData.nickname}
                   </span>
                 </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-500">User ID</span>
-                  <span className="text-white font-bold">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                    User ID
+                  </span>
+                  <span className="text-white font-black text-[11px]">
                     {confirmationData.userId}{" "}
                     {confirmationData.serverId &&
                       `(${confirmationData.serverId})`}
                   </span>
                 </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-500">Produk</span>
-                  <span className="text-white font-bold">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                    Produk
+                  </span>
+                  <span className="text-white font-black text-[11px] uppercase">
                     {confirmationData.productName}
                   </span>
                 </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-500">Total</span>
-                  <span className="text-cyan-400 font-bold text-sm">
+                <div className="flex justify-between items-center pt-2">
+                  <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                    Total
+                  </span>
+                  <span className="text-cyan-400 font-black text-lg">
                     Rp {confirmationData.totalPrice.toLocaleString()}
                   </span>
                 </div>
               </div>
 
-              {/* TAMBAHAN: PESAN GANGGUAN / ERROR DARI BACKEND */}
-              {checkoutError && (
-                <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex items-start gap-3">
-                  <span className="text-red-500 text-lg leading-none">⚠️</span>
-                  <p className="text-red-500 text-[10px] font-bold leading-relaxed">
-                    {checkoutError}
+              {/* PEMBERITAHUAN PENTING (Kuning/Amber) */}
+              <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-start gap-3">
+                <div className="bg-amber-500/20 p-1.5 rounded-lg shrink-0">
+                  <HiLightningBolt className="text-amber-500" size={16} />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-amber-500 font-black text-[10px] uppercase tracking-widest italic">
+                    Informasi Penting!
+                  </p>
+                  <p className="text-slate-400 text-[10px] leading-relaxed">
+                    Setelah membayar, <b>JANGAN</b> me-refresh atau menutup
+                    halaman ini hingga sistem berhasil mengalihkan Anda secara
+                    otomatis ke detail transaksi. Jika terlanjur keluar, segera
+                    catat/copy <b>Invoice ID</b> Anda sebelum membuka apliaksi
+                    gopay untuk melacak status transaksi.
                   </p>
                 </div>
-              )}
+              </div>
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowConfirm(false);
-                    setCheckoutError(null); // Reset error saat batal
-                  }}
-                  className="flex-1 py-3 rounded-xl bg-slate-800 text-white font-bold text-xs transition-colors hover:bg-slate-700"
-                >
-                  Batalkan
-                </button>
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-3 pt-2">
                 <button
                   onClick={handleCheckout}
                   disabled={isProcessing}
-                  className={`flex-1 py-3 rounded-xl font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2 ${
+                  className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-3 ${
                     isProcessing
                       ? "bg-slate-700 text-slate-400 cursor-not-allowed"
-                      : "bg-cyan-500 text-white shadow-cyan-500/20 active:scale-95 hover:bg-cyan-600"
+                      : "bg-cyan-500 text-white shadow-cyan-500/20 active:scale-95 hover:bg-cyan-400"
                   }`}
                 >
-                  {isProcessing ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                      <span>Memproses...</span>
-                    </>
-                  ) : (
-                    "Beli Sekarang!"
-                  )}
+                  {isProcessing ? "Memproses..." : "Beli Sekarang!"}
+                </button>
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  disabled={isProcessing}
+                  className="w-full py-2 text-slate-600 font-bold text-[10px] uppercase tracking-widest hover:text-white transition-colors"
+                >
+                  Batalkan
                 </button>
               </div>
             </div>

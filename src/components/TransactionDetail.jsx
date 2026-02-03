@@ -174,13 +174,14 @@ const TransactionDetail = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <p className="text-slate-500 text-[10px] font-bold  mb-1">
-                    Pesan
-                  </p>
-                  <p className="text-white font-bold text-sm">{data.data.sn}</p>
-                </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">
+                  Pesan
+                </span>
+                {/* Tambahkan break-all agar teks panjang otomatis turun ke bawah */}
+                <p className="text-white font-black text-xs md:text-sm leading-relaxed break-all">
+                  {data.data.sn || "-"}
+                </p>
               </div>
 
               {/* TAMBAHKAN BAGIAN KETERANGAN DI SINI */}

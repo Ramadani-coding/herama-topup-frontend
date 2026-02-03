@@ -1,0 +1,7 @@
+services:
+  herama-frontend:
+    build: .
+    container_name: herama-topup-web
+    ports:
+      - "80:80" # Akses lewat port 80 (HTTP)
+    restart: always

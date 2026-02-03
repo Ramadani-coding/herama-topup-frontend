@@ -177,11 +177,12 @@ const OrderDetail = () => {
     if (!selectedProduct) return alert("Pilih nominal produk terlebih dahulu!");
     if (!userId) return alert(`Masukkan ${getIdLabel()} anda!`);
 
-    if (
-      category.input_type !== "ID_ONLY" &&
-      category.input_type !== "PHONE_NUMBER" &&
-      !serverId
-    ) {
+    // PERBAIKAN LOGIKA: Server hanya wajib jika tipenya memang membutuhkan server
+    const needsServer =
+      category.input_type === "ID_SERVER" ||
+      category.input_type === "ID_SERVER_DROPDOWN";
+
+    if (needsServer && !serverId) {
       return alert("Silahkan pilih atau masukkan Server ID anda!");
     }
 

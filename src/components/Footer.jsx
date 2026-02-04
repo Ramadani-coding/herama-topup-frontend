@@ -48,13 +48,13 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-10">
           {/* BRAND INFO */}
           <div className="md:col-span-2 flex flex-col space-y-4">
-            <Link to="/" className="flex items-center gap-2 no-underline">
-              <div className="bg-cyan-500 p-1.5 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                <HiLightningBolt className="h-5 w-5 text-white" />
-              </div>
-              <span className="!text-white font-black tracking-tight text-xl uppercase">
-                HERAMA<span className="text-cyan-400"> TOP-UP</span>
-              </span>
+            <Link to="/" className="flex items-center no-underline group w-fit">
+              <img
+                src="/herama-logo.png"
+                alt="Herama Top-Up Logo"
+                // Di Footer kita buat logo lebih besar (h-16) dan gagah
+                className="h-20 sm:h-24 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-[0_0_15px_rgba(255,165,0,0.3)]"
+              />
             </Link>
             <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
               Platform top up game tercepat, termurah. Nikmati layanan otomatis

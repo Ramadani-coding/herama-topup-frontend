@@ -9,7 +9,6 @@ import {
 import { LuHistory } from "react-icons/lu";
 import { CgSearch } from "react-icons/cg";
 import api from "../services/api";
-
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,19 +70,20 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="fixed top-0 z-50 w-full bg-[#0b0e14] border-b border-slate-800/60 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+    <nav className="fixed top-0 z-50 w-full bg-[#0b0e14] border-b border-slate-800/60 backdrop-blur-md h-16 md:h-20 flex items-center">
+      <div className="max-w-7xl mx-auto px-4 w-full flex items-center justify-between gap-4">
         {/* LOGO SECTION - Tanpa Italic & Uppercase */}
         <Link
           to="/"
-          className="flex items-center gap-2 flex-shrink-0 no-underline"
+          className="flex items-center flex-shrink-0 no-underline group py-2"
         >
-          <div className="bg-cyan-500 p-1.5 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-            <HiLightningBolt className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-          </div>
-          <span className="!text-white font-bold tracking-tight text-base sm:text-lg">
-            Herama<span className="text-cyan-400"> Top-Up</span>
-          </span>
+          <img
+            src="/herama-logo.png"
+            alt="Herama Top-Up Logo"
+            // UKURAN: Naik dari h-7 ke h-10 (Mobile) dan h-9 ke h-16 (Desktop)
+            // GLOW: Ditambah efek drop-shadow oranye agar logo "menyala"
+            className="h-14 w-auto md:h-16 object-contain transition-all duration-300 group-hover:scale-110 drop-shadow-[0_0_15px_rgba(255,165,0,0.4)]"
+          />
         </Link>
 
         {/* DESKTOP NAV & SEARCH */}

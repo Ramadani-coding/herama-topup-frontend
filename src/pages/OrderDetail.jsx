@@ -454,28 +454,43 @@ const OrderDetail = () => {
     <>
       <div className="min-h-screen bg-[#0b0e14] pt-20">
         <div className="max-w-7xl mx-auto px-4 pb-10">
-          {/* HERO SECTION */}
-          <div className="relative w-full h-44 md:h-64 rounded-3xl overflow-hidden mb-8 shadow-2xl">
-            <img
-              src={category.image_url}
-              className="w-full h-full object-cover opacity-40 blur-sm"
-              alt="banner"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0b0e14] to-transparent" />
-            <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10">
-              <div className="flex items-center gap-5">
+          {/* HERO SECTION - TERINSPIRASI REFERENSI 2 */}
+          <div className="relative mb-20 md:mb-28 mt-4 md:mt-8">
+            {/* 1. BANNER BACKGROUND (LANDSCAPE) */}
+            <div className="relative w-full h-40 md:h-64 rounded-3xl overflow-hidden shadow-2xl">
+              <img
+                src={category.image_url}
+                className="w-full h-full object-cover opacity-40 blur-[2px]"
+                alt="banner"
+              />
+              {/* Gradien gelap agar transisi ke body lebih halus */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0b0e14] via-transparent to-transparent" />
+            </div>
+
+            {/* 2. KONTEN MELAYANG (POSTER & JUDUL) */}
+            <div className="absolute -bottom-12 md:-bottom-20 left-6 md:left-12 flex items-end gap-5 md:gap-8 w-full pr-10">
+              {/* POSTER GAME: Rasio 2:3 Anti-Gepeng */}
+              <div className="flex-shrink-0">
                 <img
                   src={category.image_url}
-                  className="w-20 h-20 md:w-32 md:h-32 rounded-2xl border-2 border-cyan-500/30 shadow-lg"
+                  className="w-28 md:w-48 aspect-[2/3] object-cover rounded-2xl shadow-2xl z-10"
                   alt={category.name}
                 />
-                <div>
-                  <h1 className="text-xl md:text-4xl font-bold text-white leading-tight mb-2">
-                    {category.name}
-                  </h1>
-                  <span className="bg-slate-800/80 text-[10px] md:text-xs text-slate-300 px-3 py-1 rounded-full flex items-center gap-1 w-fit">
-                    <HiLightningBolt className="text-cyan-400" /> Proses 1-60
-                    detik
+              </div>
+
+              {/* JUDUL & INFORMASI */}
+              <div className="pb-4 md:pb-8 flex-1">
+                <h1 className="text-2xl md:text-5xl font-black text-white leading-tight mb-2 uppercase italic tracking-tighter drop-shadow-2xl">
+                  {category.name}
+                </h1>
+                <div className="flex flex-wrap gap-2">
+                  <span className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-[9px] md:text-xs font-bold px-3 md:px-5 py-1.5 rounded-full flex items-center gap-2 backdrop-blur-md">
+                    <HiLightningBolt className="animate-pulse" /> Proses 1-60
+                    Detik
+                  </span>
+                  {/* Tambahan badge kategori agar lebih mirip referensi */}
+                  <span className="bg-slate-800/80 text-slate-300 text-[9px] md:text-xs font-bold px-3 md:px-5 py-1.5 rounded-full backdrop-blur-md">
+                    Diamond
                   </span>
                 </div>
               </div>

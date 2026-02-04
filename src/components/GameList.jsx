@@ -133,11 +133,11 @@ const GameList = () => {
                       </div>
                     )}
 
-                    {/* OVERLAY NAMA: Hybrid Mobile & Desktop */}
                     <div
-                      className={`absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-2 sm:p-4 
-                    lg:opacity-0 lg:group-hover:opacity-100 lg:translate-y-6 lg:group-hover:translate-y-0 
-                    opacity-100 translate-y-0 transition-all duration-500`}
+                      className={`absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex-col justify-end p-2 sm:p-4 
+                      hidden sm:flex
+                      lg:opacity-0 lg:group-hover:opacity-100 lg:translate-y-6 lg:group-hover:translate-y-0 
+                      transition-all duration-500`}
                     >
                       <h3 className="!text-white font-black text-[8px] sm:text-[11px] tracking-tight leading-tight line-clamp-2 drop-shadow-lg group-hover:text-cyan-400 transition-colors">
                         {game.name}

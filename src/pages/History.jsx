@@ -34,6 +34,55 @@ const History = () => {
     }
   };
 
+  // --- FUNGSI PEMETAAN STATUS (Disesuaikan dengan Key API) ---
+  const renderStatusBadge = (status_pesanan, status_pembayaran) => {
+    const s = status_pesanan?.toLowerCase() || "";
+    const p = status_pembayaran?.toLowerCase() || "";
+
+    // 1. Sukses
+    if (s === "sukses" || s === "success") {
+      return (
+        <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border bg-emerald-500/10 text-emerald-500 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+          Sukses
+        </span>
+      );
+    }
+
+    // 2. Kadaluwarsa (Data API Anda adalah "expire")
+    if (p === "expire" || p === "expired") {
+      return (
+        <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border bg-slate-500/10 text-slate-500 border-slate-800">
+          Expire
+        </span>
+      );
+    }
+
+    // 3. Menunggu Pembayaran
+    if (p === "pending") {
+      return (
+        <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border bg-amber-500/10 text-amber-500 border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+          Pending
+        </span>
+      );
+    }
+
+    // 4. Dibatalkan
+    if (s === "cancel" || s === "batal") {
+      return (
+        <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border bg-red-500/10 text-red-500 border-red-500/20">
+          Dibatalkan
+        </span>
+      );
+    }
+
+    // 5. Default Gagal
+    return (
+      <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border bg-red-500/10 text-red-500 border-red-500/20">
+        Gagal
+      </span>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#0b0e14] pt-24 md:pt-32 pb-20 px-4 md:px-8">
       <div className="max-w-6xl mx-auto">
@@ -82,81 +131,64 @@ const History = () => {
         </div>
 
         {/* TABEL TRANSAKSI TERAKHIR */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <HiClock className="text-cyan-500" size={24} />
-            <div>
-              <h2 className="text-white font-black text-lg md:text-xl uppercase">
-                Transaksi Terakhir
-              </h2>
-              <p className="text-slate-500 text-[10px] md:text-xs">
-                Berikut adalah 10 transaksi terbaru di Herama Top-Up
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-[#161b22] rounded-3xl border border-slate-800/50 overflow-hidden shadow-2xl">
-            {/* Wrapper Scrollable untuk Mobile */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-[#1c232d] text-slate-400 uppercase text-[9px] md:text-[10px] font-black tracking-widest">
-                    <th className="px-6 py-5">Tanggal</th>
-                    <th className="px-6 py-5">Order ID</th>
-                    <th className="px-6 py-5">Produk</th>
-                    <th className="px-6 py-5 text-right">Harga</th>
-                    <th className="px-6 py-5 text-center">Status</th>
+        <div className="bg-[#161b22] rounded-3xl border border-slate-800/50 overflow-hidden shadow-2xl">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-[#1c232d] text-slate-400 uppercase text-[9px] md:text-[10px] font-black tracking-widest">
+                  <th className="px-6 py-5">Tanggal</th>
+                  <th className="px-6 py-5">Order ID</th>
+                  <th className="px-6 py-5">Produk</th>
+                  <th className="px-6 py-5 text-right">Harga</th>
+                  <th className="px-6 py-5 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/50">
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan="5"
+                      className="px-6 py-10 text-center text-slate-500 text-xs italic"
+                    >
+                      Memuat transaksi...
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/50">
-                  {loading ? (
-                    <tr>
-                      <td
-                        colSpan="5"
-                        className="px-6 py-10 text-center text-slate-500 text-xs italic"
-                      >
-                        Memuat transaksi...
+                ) : (
+                  recentTransactions.map((tx, index) => (
+                    <tr
+                      key={index}
+                      className="hover:bg-slate-800/20 transition-colors group"
+                    >
+                      <td className="px-6 py-4 text-slate-300 text-[10px] md:text-xs whitespace-nowrap">
+                        {new Date(tx.tanggal).toLocaleDateString("id-ID", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </td>
+                      <td className="px-6 py-4 font-bold text-orange-500 text-[10px] md:text-xs tracking-wider whitespace-nowrap">
+                        {tx.order_id}
+                      </td>
+                      <td className="px-6 py-4 text-slate-200 text-[10px] md:text-xs font-bold whitespace-nowrap">
+                        {tx.produk}
+                      </td>
+                      <td className="px-6 py-4 text-white text-[10px] md:text-xs font-black text-right whitespace-nowrap">
+                        Rp {tx.harga.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {/* UPDATE: Menggunakan tx.status_pesanan dan tx.status_pembayaran 
+                  agar sinkron dengan data dari API Postman 
+                */}
+                        {renderStatusBadge(
+                          tx.status_pesanan,
+                          tx.status_pembayaran,
+                        )}
                       </td>
                     </tr>
-                  ) : (
-                    recentTransactions.map((tx, index) => (
-                      <tr
-                        key={index}
-                        className="hover:bg-slate-800/30 transition-colors group"
-                      >
-                        <td className="px-6 py-4 text-slate-300 text-[10px] md:text-xs whitespace-nowrap">
-                          {new Date(tx.tanggal).toLocaleDateString("id-ID", {
-                            day: "2-digit",
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </td>
-                        <td className="px-6 py-4 font-bold text-orange-500 text-[10px] md:text-xs tracking-wider whitespace-nowrap">
-                          {tx.order_id}
-                        </td>
-                        <td className="px-6 py-4 text-slate-200 text-[10px] md:text-xs font-bold whitespace-nowrap">
-                          {tx.produk}
-                        </td>
-                        <td className="px-6 py-4 text-white text-[10px] md:text-xs font-black text-right whitespace-nowrap">
-                          Rp {tx.harga.toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span
-                            className={`px-3 py-1 rounded-full text-[9px] font-black uppercase ${
-                              tx.status === "sukses" || tx.status === "Success"
-                                ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                                : "bg-orange-500/10 text-orange-500 border border-orange-500/20"
-                            }`}
-                          >
-                            {tx.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

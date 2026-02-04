@@ -11,6 +11,7 @@ import OrderDetail from "./pages/OrderDetail";
 import TransactionDetail from "./components/TransactionDetail";
 import History from "./pages/History";
 import PriceList from "./pages/PriceList";
+import ChatButton from "./components/ChatButton";
 
 function App() {
   return (
@@ -29,7 +30,7 @@ function App() {
             <Route path="/list-product" element={<PriceList />} />
           </Routes>
         </main>
-
+        <ChatButton />
         {/* Footer akan selalu muncul di bawah */}
         <Footer />
       </div>

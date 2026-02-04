@@ -100,17 +100,37 @@ const OrderDetail = () => {
     }
   };
 
+  const isMobileDevice = useMemo(() => {
+    const ua = navigator.userAgent;
+    // Cek User Agent standar
+    const isUA =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+
+    // DETEKSI TAMBAHAN: Cek kemampuan sentuh (HP di mode desktop biasanya masih punya ini)
+    const hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
+    // DETEKSI LAYAR: Jika layar kurang dari 1024px, kemungkinan besar itu tablet/HP
+    const isSmallScreen = window.innerWidth < 1024;
+
+    // Jika salah satu terpenuhi, anggap sebagai Mobile untuk keamanan fee
+    return isUA || (hasTouch && isSmallScreen);
+  }, []);
+
   const paymentCategories = useMemo(
     () => [
       {
         name: "E-Wallet & QRIS",
         channels: [
           {
-            id: "gopay", // Sesuai GoPay
-            name: "Gopay",
+            id: "gopay", // ID tetap gopay agar terbaca oleh Midtrans
+            // Nama berubah sesuai device untuk transparansi ke user
+            name: isMobileDevice ? "Gopay" : "QRIS",
             feeType: "percent",
-            feeValue: 0.007,
-            icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Gopay_logo.svg/120px-Gopay_logo.svg.png?20251006142655",
+            // Fee dinamis: 2% (0.02) untuk mobile, 0.7% (0.007) untuk desktop
+            feeValue: isMobileDevice ? 0.02 : 0.0,
+            icon: isMobileDevice
+              ? "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Gopay_logo.svg/120px-Gopay_logo.svg.png?20251006142655"
+              : "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Logo_QRIS.svg/1200px-Logo_QRIS.svg.png",
           },
         ],
       },
@@ -118,35 +138,35 @@ const OrderDetail = () => {
         name: "Virtual Accounts",
         channels: [
           {
-            id: "bni_va", // Aktif di dashboard
+            id: "bni_va",
             name: "BNI Virtual Account",
             feeType: "flat",
             feeValue: 4000,
             icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Bank_Negara_Indonesia_logo_%282004%29.svg/250px-Bank_Negara_Indonesia_logo_%282004%29.svg.png?20250516061934",
           },
           {
-            id: "bri_va", // Aktif di dashboard
+            id: "bri_va",
             name: "BRI Virtual Account",
             feeType: "flat",
             feeValue: 4000,
             icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/BRI_2020.svg/960px-BRI_2020.svg.png?20221123095928",
           },
           {
-            id: "echannel", // ID Midtrans untuk Mandiri
+            id: "echannel",
             name: "Mandiri Virtual Account",
             feeType: "flat",
             feeValue: 4000,
             icon: "https://upload.wikimedia.org/wikipedia/commons/a/ad/Bank_Mandiri_logo_2016.svg",
           },
           {
-            id: "cimb_va", // Aktif di dashboard
+            id: "cimb_va",
             name: "CIMB Niaga VA",
             feeType: "flat",
             feeValue: 4000,
             icon: "https://upload.wikimedia.org/wikipedia/commons/3/38/CIMB_Niaga_logo.svg",
           },
           {
-            id: "permata_va", // Aktif di dashboard
+            id: "permata_va",
             name: "Permata Virtual Account",
             feeType: "flat",
             feeValue: 4000,
@@ -155,7 +175,7 @@ const OrderDetail = () => {
         ],
       },
     ],
-    [],
+    [isMobileDevice], // Menjalankan ulang jika status device berubah
   );
 
   // Fungsi hitung total harga + fee
@@ -206,6 +226,7 @@ const OrderDetail = () => {
         customer_no: combinedCustomerNo,
         phone_number: whatsapp,
         payment_method: selectedPayment,
+        is_mobile: isMobileDevice,
         amount: finalAmount,
       };
 
@@ -750,32 +771,50 @@ const OrderDetail = () => {
                             <button
                               key={channel.id}
                               onClick={() => setSelectedPayment(channel.id)}
-                              className={`flex items-center justify-between p-3 rounded-xl border transition-all ${selectedPayment === channel.id ? "bg-cyan-500/10 border-cyan-500 ring-1 ring-cyan-500" : "bg-[#161b22] border-slate-800"}`}
+                              className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+                                selectedPayment === channel.id
+                                  ? "bg-cyan-500/10 border-cyan-500 ring-1 ring-cyan-500"
+                                  : "bg-[#161b22] border-slate-800"
+                              }`}
                             >
                               <div className="flex flex-col gap-1 items-start">
                                 <div className="flex items-center gap-3">
-                                  <div className="bg-white p-1 rounded-lg w-10 h-6 flex items-center justify-center">
+                                  <div className="bg-white p-1 rounded-lg w-10 h-6 flex items-center justify-center shrink-0">
                                     <img
                                       src={channel.icon}
                                       alt={channel.name}
                                       className="max-h-full"
                                     />
                                   </div>
-                                  <span className="text-white font-bold text-[10px]">
-                                    {channel.name}
-                                  </span>
+                                  <div className="flex flex-col">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-white font-bold text-[10px]">
+                                        {channel.name}
+                                      </span>
+                                      {/* BADGE DINAMIS: Muncul jika feeValue adalah 0 */}
+                                      {channel.feeValue === 0 && (
+                                        <span className="bg-emerald-500/10 text-emerald-400 text-[7px] px-1.5 py-0.5 rounded-md font-black uppercase tracking-tighter border border-emerald-500/20">
+                                          Bebas Admin
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
-                                {/* Tampilkan Total Harga di bawah logo */}
+
+                                {/* Tampilan Harga */}
                                 {totalForThisChannel && (
-                                  <span className="text-[9px] text-slate-400 mt-1">
-                                    Total: Rp{" "}
-                                    {totalForThisChannel.toLocaleString()}
+                                  <span className="text-[9px] text-slate-500 mt-1 ml-1">
+                                    Total:{" "}
+                                    <span className="text-white font-bold tracking-wide">
+                                      Rp {totalForThisChannel.toLocaleString()}
+                                    </span>
                                   </span>
                                 )}
                               </div>
+
                               {selectedPayment === channel.id && (
                                 <HiCheckCircle
-                                  className="text-cyan-500"
+                                  className="text-cyan-500 shrink-0"
                                   size={16}
                                 />
                               )}
@@ -900,7 +939,7 @@ const OrderDetail = () => {
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-all">
           <div className="bg-[#161b22] border border-slate-800 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
             <div className="p-8 space-y-6">
-              {/* Header */}
+              {/* Header Section */}
               <div className="text-center space-y-3">
                 <div className="w-16 h-16 bg-cyan-500/10 rounded-full flex items-center justify-center mx-auto border border-cyan-500/20">
                   <HiDocumentText className="text-cyan-500 text-3xl" />
@@ -913,13 +952,12 @@ const OrderDetail = () => {
                 </p>
               </div>
 
-              {/* Data Detail (Tetap Dipertahankan) */}
+              {/* Order Data Section */}
               <div className="space-y-4 border-y border-slate-800/50 py-5">
                 <div className="flex justify-between items-start gap-4">
                   <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">
                     Nickname
                   </span>
-                  {/* Perbaikan break-all untuk teks panjang */}
                   <span className="text-white font-black text-[11px] text-right leading-tight break-all max-w-[65%]">
                     {confirmationData.nickname}
                   </span>
@@ -928,7 +966,7 @@ const OrderDetail = () => {
                   <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">
                     User ID
                   </span>
-                  <span className="text-white font-black text-[11px]">
+                  <span className="text-white font-black text-[11px] tracking-widest">
                     {confirmationData.userId}{" "}
                     {confirmationData.serverId &&
                       `(${confirmationData.serverId})`}
@@ -952,44 +990,73 @@ const OrderDetail = () => {
                 </div>
               </div>
 
-              {/* PEMBERITAHUAN PENTING (Kuning/Amber) */}
+              {/* PEMBERITAHUAN PENTING (Amber) */}
               <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-start gap-3">
                 <div className="bg-amber-500/20 p-1.5 rounded-lg shrink-0">
                   <HiLightningBolt className="text-amber-500" size={16} />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-amber-500 font-black text-[10px] uppercase tracking-widest italic">
+                  <p className="text-amber-500 font-black text-[10px] uppercase tracking-widest italic leading-none">
                     Informasi Penting!
                   </p>
                   <p className="text-slate-400 text-[10px] leading-relaxed">
                     Setelah membayar, <b>JANGAN</b> me-refresh atau menutup
                     halaman ini hingga sistem berhasil mengalihkan Anda secara
-                    otomatis ke detail transaksi. Jika terlanjur keluar, segera
-                    catat/copy <b>Invoice ID</b> Anda sebelum membuka apliaksi
-                    gopay untuk melacak status transaksi.
+                    otomatis. Jika terlanjur keluar, catat <b>Invoice ID</b>{" "}
+                    Anda.
                   </p>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-3 pt-2">
+              {/* TAMPILAN PESAN GANGGUAN (Red) - Dibuat seragam dengan Amber */}
+              {checkoutError && (
+                <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex items-start gap-3 animate-pulse">
+                  <div className="bg-red-500/20 p-1.5 rounded-lg shrink-0">
+                    <span className="text-red-500 text-sm font-bold leading-none">
+                      ⚠️
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-red-500 font-black text-[10px] uppercase tracking-widest italic leading-none">
+                      Pesanan Gagal!
+                    </p>
+                    <p className="text-red-400 text-[10px] leading-relaxed">
+                      {checkoutError}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons Section - Diubah menjadi bersebelahan */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => {
+                    setShowConfirm(false);
+                    setCheckoutError(null); // Reset error saat batal
+                  }}
+                  disabled={isProcessing}
+                  className="flex-1 py-4 rounded-2xl bg-slate-800 text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-700 hover:text-white transition-all"
+                >
+                  Batal
+                </button>
+
                 <button
                   onClick={handleCheckout}
                   disabled={isProcessing}
-                  className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-3 ${
+                  className={`flex-[2] py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-3 ${
                     isProcessing
                       ? "bg-slate-700 text-slate-400 cursor-not-allowed"
                       : "bg-cyan-500 text-white shadow-cyan-500/20 active:scale-95 hover:bg-cyan-400"
                   }`}
                 >
-                  {isProcessing ? "Memproses..." : "Beli Sekarang!"}
-                </button>
-                <button
-                  onClick={() => setShowConfirm(false)}
-                  disabled={isProcessing}
-                  className="w-full py-2 text-slate-600 font-bold text-[10px] uppercase tracking-widest hover:text-white transition-colors"
-                >
-                  Batalkan
+                  {isProcessing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      <span>Proses...</span>
+                    </>
+                  ) : (
+                    "Beli Sekarang!"
+                  )}
                 </button>
               </div>
             </div>

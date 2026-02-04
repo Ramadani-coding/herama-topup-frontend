@@ -30,6 +30,7 @@ const OrderDetail = () => {
   const [confirmationData, setConfirmationData] = useState(null);
   const [isChecking, setIsChecking] = useState(false);
   const [checkoutError, setCheckoutError] = useState(null); // State untuk pesan gangguan produk
+  const [errorModal, setErrorModal] = useState({ show: false, message: "" });
 
   const triggerConfirm = async () => {
     // 1. Validasi Produk
@@ -76,14 +77,30 @@ const OrderDetail = () => {
 
     setIsChecking(true);
     try {
-      const combinedId = serverId ? `${userId}${serverId}` : userId; //
+      const combinedId = serverId ? `${userId}${serverId}` : userId;
       const response = await api.post("/payment/check-nickname", {
         sku_code: checkSku,
         customer_no: combinedId,
       });
 
+      // --- LOGIKA PEMBERSIHAN NICKNAME DI MODAL ---
+      let rawNickname = response.data.nickname || "N/A";
+      let cleanNickname = rawNickname;
+
+      // Jika formatnya "ID 12345 / Nickname", ambil bagian setelah "/"
+      if (rawNickname.includes(" / ")) {
+        const parts = rawNickname.split(" / ");
+        cleanNickname = parts[parts.length - 1]; // Mengambil bagian terakhir (Nickname)
+      }
+      // Jika formatnya "Nickname - ID", ambil bagian sebelum "-"
+      else if (rawNickname.includes(" - ")) {
+        const parts = rawNickname.split(" - ");
+        cleanNickname = parts[0];
+      }
+      // ------------------------------------------------------------------
+
       setConfirmationData({
-        nickname: response.data.nickname, //
+        nickname: cleanNickname.trim(), // Gunakan nickname yang sudah bersih
         userId,
         serverId,
         productName: selectedProduct.product_name,
@@ -94,7 +111,13 @@ const OrderDetail = () => {
       });
       setShowConfirm(true);
     } catch (err) {
-      alert(err.response?.data?.message || "Gagal memverifikasi ID anda.");
+      // TANGKAP PESAN DARI BACKEND: Seperti "ID Tidak Ditemukan"
+      setErrorModal({
+        show: true,
+        message:
+          err.response?.data?.message ||
+          "Gagal memverifikasi ID anda. Pastikan data yang dimasukkan benar.",
+      });
     } finally {
       setIsChecking(false);
     }
@@ -1059,6 +1082,35 @@ const OrderDetail = () => {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* MODAL ERROR CUSTOM */}
+      {errorModal.show && (
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+          <div className="bg-[#161b22] border border-red-500/30 w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(239,68,68,0.2)] animate-in fade-in zoom-in duration-300">
+            <div className="p-8 text-center space-y-6">
+              {/* Icon Warning Bergetar */}
+              <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto border border-red-500/20">
+                <span className="text-red-500 text-4xl animate-bounce">⚠️</span>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-white font-black text-xl uppercase tracking-tight">
+                  Data Tidak Valid
+                </h3>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  {errorModal.message}
+                </p>
+              </div>
+
+              <button
+                onClick={() => setErrorModal({ show: false, message: "" })}
+                className="w-full py-4 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-red-500/20"
+              >
+                Periksa Kembali ID
+              </button>
             </div>
           </div>
         </div>

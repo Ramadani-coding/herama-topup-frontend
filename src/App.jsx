@@ -30,7 +30,6 @@ function App() {
             <Route path="/list-product" element={<PriceList />} />
           </Routes>
         </main>
-        <ChatButton />
         {/* Footer akan selalu muncul di bawah */}
         <Footer />
       </div>

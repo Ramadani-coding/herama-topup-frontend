@@ -459,7 +459,7 @@ const OrderDetail = () => {
             {/* 1. BANNER BACKGROUND (LANDSCAPE) */}
             <div className="relative w-full h-40 md:h-64 rounded-3xl overflow-hidden shadow-2xl">
               <img
-                src={category.image_url}
+                src="https://zhlrdnzsgvxbvgvujgxn.supabase.co/storage/v1/object/public/game-assets/order-banner.jpg"
                 className="w-full h-full object-cover opacity-40 blur-[2px]"
                 alt="banner"
               />
@@ -487,10 +487,6 @@ const OrderDetail = () => {
                   <span className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-[9px] md:text-xs font-bold px-3 md:px-5 py-1.5 rounded-full flex items-center gap-2 backdrop-blur-md">
                     <HiLightningBolt className="animate-pulse" /> Proses 1-60
                     Detik
-                  </span>
-                  {/* Tambahan badge kategori agar lebih mirip referensi */}
-                  <span className="bg-slate-800/80 text-slate-300 text-[9px] md:text-xs font-bold px-3 md:px-5 py-1.5 rounded-full backdrop-blur-md">
-                    Diamond
                   </span>
                 </div>
               </div>

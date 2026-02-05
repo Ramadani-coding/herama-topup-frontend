@@ -6,22 +6,15 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 const demoBanners = [
   {
     id: 1,
-    title: "MOBILE LEGENDS",
-    src: "https://zhlrdnzsgvxbvgvujgxn.supabase.co/storage/v1/object/public/game-assets/bener.jpg",
+    src: "https://zhlrdnzsgvxbvgvujgxn.supabase.co/storage/v1/object/public/game-assets/banner%20wlcome.jpg",
     href: "/order/mobile-legends",
-  },
-  {
-    id: 2,
-    title: "Free Fire",
-    src: "https://zhlrdnzsgvxbvgvujgxn.supabase.co/storage/v1/object/public/game-assets/bener2.jpg",
-    href: "/order/free-firee",
   },
 ];
 
 const Hero = () => {
   return (
     /* mt-14 digunakan untuk memberikan ruang tepat di bawah fixed navbar h-14 */
-    <section className="mt-14 pb-4 bg-[#0b0e14]">
+    <section className="mt-16 sm:mt-24 pb-4 bg-[#0b0e14]">
       <div className="max-w-7xl mx-auto px-4 pt-4">
         <div className="rounded-[2.5rem] overflow-hidden shadow-2xl border border-slate-800/40">
           <Carousel
@@ -50,9 +43,6 @@ const Hero = () => {
                     <h2 className="!text-white font-black text-lg md:text-4xl italic uppercase tracking-tighter">
                       {banner.title}
                     </h2>
-                    <p className="!text-cyan-400 text-[10px] md:text-sm font-bold tracking-widest mt-1 uppercase">
-                      Top Up Tercepat & Aman 100%
-                    </p>
                   </div>
                 </div>
               </Link>

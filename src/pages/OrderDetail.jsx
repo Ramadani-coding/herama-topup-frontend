@@ -96,6 +96,13 @@ const OrderDetail = () => {
       else if (rawNickname.includes(" - ")) {
         const parts = rawNickname.split(" - ");
         cleanNickname = parts[0];
+      } else if (rawNickname.includes("Nama:")) {
+      /** * TAMBAHAN: Logika Khusus E-Wallet (DANA/DLL)
+       * Memisahkan string berdasarkan "/" dan menghapus prefix "Nama:"
+       */
+        // Contoh: "Nama:DNID AHMXX RAMXXXXX/Nomor:085..." menjadi "DNID AHMXX RAMXXXXX"
+        const parts = rawNickname.split("/");
+        cleanNickname = parts[0].replace("Nama:", "").trim();
       }
       // ------------------------------------------------------------------
 
@@ -145,16 +152,27 @@ const OrderDetail = () => {
         name: "E-Wallet & QRIS",
         channels: [
           {
-            id: "gopay", // ID tetap gopay agar terbaca oleh Midtrans
-            // Nama berubah sesuai device untuk transparansi ke user
+            id: "gopay",
+            // Jika desktop, label berubah jadi QRIS
             name: isMobileDevice ? "Gopay" : "QRIS",
             feeType: "percent",
-            // Fee dinamis: 2% (0.02) untuk mobile, 0.7% (0.007) untuk desktop
             feeValue: isMobileDevice ? 0.02 : 0.0,
             icon: isMobileDevice
               ? "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Gopay_logo.svg/120px-Gopay_logo.svg.png?20251006142655"
               : "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Logo_QRIS.svg/1200px-Logo_QRIS.svg.png",
           },
+          // LOGIKA BARU: DANA hanya muncul jika isMobileDevice bernilai true
+          ...(isMobileDevice
+            ? [
+                {
+                  id: "dana",
+                  name: "DANA",
+                  feeType: "percent",
+                  feeValue: 0.015, // Fee 1.5% tetap berlaku di mobile
+                  icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Logo_dana_blue.svg/1200px-Logo_dana_blue.svg.png",
+                },
+              ]
+            : []),
         ],
       },
       {
@@ -198,7 +216,7 @@ const OrderDetail = () => {
         ],
       },
     ],
-    [isMobileDevice], // Menjalankan ulang jika status device berubah
+    [isMobileDevice], // Array ketergantungan ini memastikan daftar terupdate saat device berganti
   );
 
   // Fungsi hitung total harga + fee

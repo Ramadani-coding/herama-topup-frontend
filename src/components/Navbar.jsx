@@ -1,28 +1,21 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import {
-  HiLightningBolt,
-  HiOutlineHome,
-  HiMenuAlt3,
-  HiX,
-} from "react-icons/hi";
+import { HiOutlineHome, HiMenuAlt3, HiX } from "react-icons/hi";
 import { LuHistory } from "react-icons/lu";
 import { CgSearch } from "react-icons/cg";
 import api from "../services/api";
+
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
 
-  // Ref untuk Desktop dan Mobile agar tidak bentrok saat klik
   const searchRef = useRef(null);
   const mobileSearchRef = useRef(null);
-
   const navigate = useNavigate();
   const location = useLocation();
 
-  // FIX: Menutup dropdown dengan mengecek kedua Ref (Desktop & Mobile)
   useEffect(() => {
     const handleClickOutside = (event) => {
       const isOutsideDesktop =
@@ -31,7 +24,6 @@ const Navbar = () => {
         mobileSearchRef.current &&
         !mobileSearchRef.current.contains(event.target);
 
-      // Hanya sembunyikan jika klik di luar keduanya
       if (isOutsideDesktop && isOutsideMobile) {
         setShowResults(false);
       }
@@ -40,7 +32,6 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Logika Pencarian
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
       if (searchQuery.length >= 2) {
@@ -59,7 +50,6 @@ const Navbar = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery]);
 
-  // FIX: Urutan eksekusi agar navigasi berjalan dulu baru menu ditutup
   const handleResultClick = (slug) => {
     navigate(`/order/${slug}`);
     setShowResults(false);
@@ -72,7 +62,7 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 z-50 w-full bg-[#0b0e14] border-b border-slate-800/60 backdrop-blur-md h-16 md:h-20 flex items-center">
       <div className="max-w-7xl mx-auto px-4 w-full flex items-center justify-between gap-4">
-        {/* LOGO SECTION - Tanpa Italic & Uppercase */}
+        {/* LOGO SECTION */}
         <Link
           to="/"
           className="flex items-center flex-shrink-0 no-underline group py-2"
@@ -80,8 +70,6 @@ const Navbar = () => {
           <img
             src="/herama-logo.png"
             alt="Herama Top-Up Logo"
-            // UKURAN: Naik dari h-7 ke h-10 (Mobile) dan h-9 ke h-16 (Desktop)
-            // GLOW: Ditambah efek drop-shadow oranye agar logo "menyala"
             className="h-14 w-auto md:h-16 object-contain transition-all duration-300 group-hover:scale-110 drop-shadow-[0_0_15px_rgba(255,165,0,0.4)]"
           />
         </Link>
@@ -134,14 +122,15 @@ const Navbar = () => {
                       <button
                         key={game.id}
                         onClick={() => handleResultClick(game.slug)}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800/50 border-none text-left"
+                        className="w-full flex items-center gap-4 px-4 py-3 hover:bg-slate-800/50 border-none text-left transition-colors"
                       >
+                        {/* FIX GAMBAR DESKTOP: POSTER RATIO 2:3 */}
                         <img
                           src={game.image_url}
                           alt={game.name}
-                          className="w-10 h-10 rounded-lg object-cover ring-1 ring-slate-700"
+                          className="w-10 aspect-[2/3] rounded-md object-cover ring-1 ring-slate-700/50 flex-shrink-0"
                         />
-                        <span className="text-[11px] font-bold !text-white">
+                        <span className="text-[11px] font-bold !text-white leading-tight">
                           {game.name}
                         </span>
                       </button>
@@ -174,7 +163,6 @@ const Navbar = () => {
         className={`fixed inset-x-0 top-14 bg-[#0b0e14] border-b border-slate-800 transition-all duration-300 md:hidden overflow-y-auto ${isMenuOpen ? "max-h-[85vh] opacity-100 shadow-2xl" : "max-h-0 opacity-0"}`}
       >
         <div className="flex flex-col p-5 gap-6">
-          {/* SEARCH SECTION MOBILE - Ditambahkan Ref agar klik tidak dianggap "di luar" */}
           <div className="w-full space-y-3" ref={mobileSearchRef}>
             <div className="relative flex items-center">
               <div className="absolute left-4 flex items-center pointer-events-none">
@@ -197,14 +185,15 @@ const Navbar = () => {
                       <button
                         key={game.id}
                         onClick={() => handleResultClick(game.slug)}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800/50 active:bg-slate-800 border-none text-left"
+                        className="w-full flex items-center gap-4 px-4 py-3 hover:bg-slate-800/50 active:bg-slate-800 border-none text-left"
                       >
+                        {/* FIX GAMBAR MOBILE: POSTER RATIO 2:3 */}
                         <img
                           src={game.image_url}
                           alt={game.name}
-                          className="w-9 h-9 rounded-lg object-cover"
+                          className="w-9 aspect-[2/3] rounded-md object-cover ring-1 ring-slate-700/50 flex-shrink-0"
                         />
-                        <span className="text-[11px] font-bold !text-white">
+                        <span className="text-[11px] font-bold !text-white leading-tight">
                           {game.name}
                         </span>
                       </button>

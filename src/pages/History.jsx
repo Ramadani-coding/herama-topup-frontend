@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // Tambahkan Link jika dibutuhkan
 import { HiSearch, HiChatAlt2, HiClock } from "react-icons/hi";
-import axios from "axios";
 import api from "../services/api";
 
 const History = () => {
@@ -10,7 +9,6 @@ const History = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // 1. Fetch data 10 transaksi terakhir saat halaman dimuat
   useEffect(() => {
     const fetchRecent = async () => {
       try {
@@ -34,13 +32,13 @@ const History = () => {
     }
   };
 
-  // --- FUNGSI PEMETAAN STATUS (Disesuaikan dengan Key API) ---
+  // --- FUNGSI PEMETAAN STATUS (FIXED LOGIC) ---
   const renderStatusBadge = (status_pesanan, status_pembayaran) => {
     const s = status_pesanan?.toLowerCase() || "";
     const p = status_pembayaran?.toLowerCase() || "";
 
-    // 1. Sukses
-    if (s === "sukses" || s === "success") {
+    // 1. SUKSES TOTAL (Paid & Success)
+    if (p === "success" && (s === "sukses" || s === "success")) {
       return (
         <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border bg-emerald-500/10 text-emerald-500 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
           Sukses
@@ -48,37 +46,46 @@ const History = () => {
       );
     }
 
-    // 2. Kadaluwarsa (Data API Anda adalah "expire")
-    if (p === "expire" || p === "expired") {
+    // 2. PROSES (Sudah bayar, tapi produk masih pending di sistem)
+    if (p === "success" && s === "pending") {
       return (
-        <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border bg-slate-500/10 text-slate-500 border-slate-800">
-          Expire
+        <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border bg-cyan-500/10 text-cyan-400 border-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+          Proses
         </span>
       );
     }
 
-    // 3. Menunggu Pembayaran
-    if (p === "pending") {
+    // 3. WAITING PAYMENT (Belum ada pembayaran masuk)
+    if (p === "pending" && s === "pending") {
       return (
         <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border bg-amber-500/10 text-amber-500 border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-          Pending
+          Waiting Payment
         </span>
       );
     }
 
-    // 4. Dibatalkan
-    if (s === "cancel" || s === "batal") {
+    // 4. CANCEL (Waktu habis & status masih pending)
+    if ((p === "expire" || p === "expired") && s === "pending") {
+      return (
+        <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border bg-red-500/10 text-red-500 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+          Cancel
+        </span>
+      );
+    }
+
+    // 5. GAGAL (Sudah bayar tapi transaksi ditolak/gagal sistem)
+    if (p === "success" && s === "gagal") {
       return (
         <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border bg-red-500/10 text-red-500 border-red-500/20">
-          Dibatalkan
+          Gagal
         </span>
       );
     }
 
-    // 5. Default Gagal
+    // Default Fallback
     return (
-      <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border bg-red-500/10 text-red-500 border-red-500/20">
-        Gagal
+      <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border bg-slate-800 text-slate-500 border-slate-700">
+        {s || "Unknown"}
       </span>
     );
   };
@@ -86,7 +93,6 @@ const History = () => {
   return (
     <div className="min-h-screen bg-[#0b0e14] pt-24 md:pt-32 pb-20 px-4 md:px-8">
       <div className="max-w-6xl mx-auto">
-        {/* FORM PENCARIAN (Sama seperti sebelumnya) */}
         <div className="max-w-xl mb-16">
           <div className="space-y-2 mb-8">
             <h1 className="text-white text-xl md:text-2xl font-black tracking-tight uppercase">
@@ -123,14 +129,13 @@ const History = () => {
             </div>
             <button
               type="submit"
-              className="px-6 py-2.5 bg-cyan-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl"
+              className="px-6 py-2.5 bg-cyan-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-cyan-400 transition-all active:scale-95 shadow-[0_0_20px_rgba(6,182,212,0.3)]"
             >
               Cari Transaksi
             </button>
           </form>
         </div>
 
-        {/* TABEL TRANSAKSI TERAKHIR */}
         <div className="bg-[#161b22] rounded-3xl border border-slate-800/50 overflow-hidden shadow-2xl">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -176,9 +181,6 @@ const History = () => {
                         Rp {tx.harga.toLocaleString()}
                       </td>
                       <td className="px-6 py-4 text-center">
-                        {/* UPDATE: Menggunakan tx.status_pesanan dan tx.status_pembayaran 
-                  agar sinkron dengan data dari API Postman 
-                */}
                         {renderStatusBadge(
                           tx.status_pesanan,
                           tx.status_pembayaran,

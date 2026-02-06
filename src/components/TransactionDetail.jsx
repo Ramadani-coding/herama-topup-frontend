@@ -49,35 +49,70 @@ const TransactionDetail = () => {
     );
 
   const getDeadlineBanner = () => {
-    const pStatus = data?.data?.payment_status;
+    const pStatus = data?.data?.payment_status; // Status Pembayaran (success, pending, expire)
+    const tStatus = data?.data?.status; // Status Transaksi (sukses, pending, gagal)
 
-    // 1. KONDISI SUKSES (PAID)
-    if (pStatus === "success") {
+    // 1. KONDISI SELESAI (PAID & SUKSES)
+    if (pStatus === "success" && tStatus === "sukses") {
       return {
-        title: "Pembayaran Berhasil",
-        message: "Terima kasih! Pesanan Anda sedang diproses oleh sistem.",
+        title: "Pesanan Selesai",
+        message:
+          "Transaksi berhasil! Produk telah berhasil dikirim ke akun Anda. Terima kasih telah belanja.",
         colorClass: "bg-emerald-500/10 border-emerald-500/20 text-emerald-500",
         icon: <HiCheckCircle className="text-emerald-500 text-lg" />,
       };
     }
 
-    // 2. KONDISI EXPIRE / GAGAL
-    if (pStatus === "expire" || pStatus === "failed") {
+    // 2. KONDISI SEDANG DIPROSES (PAID & PENDING)
+    if (pStatus === "success" && tStatus === "pending") {
+      return {
+        title: "Pembayaran Berhasil",
+        message:
+          "Terima kasih! Pesanan Anda sedang diproses oleh sistem. Mohon tunggu sebentar.",
+        colorClass: "bg-emerald-500/10 border-emerald-500/20 text-emerald-500",
+        icon: <HiCheckCircle className="text-emerald-500 text-lg" />,
+      };
+    }
+
+    // 3. KONDISI EXPIRE (EXPIRE & PENDING)
+    if (pStatus === "expire" && tStatus === "pending") {
       return {
         title: "Waktu Pembayaran Habis",
         message:
-          "Transaksi ini telah kedaluwarsa. Silakan lakukan order ulang.",
+          "Transaksi ini telah kedaluwarsa karena batas waktu pembayaran habis. Silakan lakukan order ulang.",
         colorClass: "bg-slate-800/50 border-slate-700 text-slate-400",
         icon: <HiXCircle className="text-slate-500 text-lg" />,
       };
     }
 
-    // 3. KONDISI DEFAULT (WAIT PAYMENT / PENDING)
+    // 4. KONDISI MENUNGGU PEMBAYARAN (PENDING & PENDING)
+    if (pStatus === "pending" && tStatus === "pending") {
+      return {
+        title: "Menunggu Pembayaran",
+        message:
+          "Segera selesaikan pembayaran Anda agar pesanan dapat langsung diproses otomatis oleh sistem.",
+        colorClass: "bg-orange-500/10 border-orange-500/20 text-orange-500",
+        icon: <HiClock className="text-orange-500 animate-pulse text-lg" />,
+      };
+    }
+
+    // 5. KONDISI TRANSAKSI GAGAL (SUDAH BAYAR TAPI SISTEM GAGAL)
+    if (pStatus === "success" && tStatus === "gagal") {
+      return {
+        title: "Transaksi Gagal",
+        message:
+          "Pembayaran terdeteksi namun produk gagal terkirim. Saldo Anda aman, silakan hubungi Admin.",
+        colorClass: "bg-red-500/10 border-red-500/20 text-red-500",
+        icon: <HiXCircle className="text-red-500 text-lg" />,
+      };
+    }
+
+    // KONDISI DEFAULT
     return {
-      title: "Batas Pembayaran",
-      message: "Pesanan akan kadaluwarsa dalam 24 jam",
-      colorClass: "bg-red-500/10 border-red-500/20 text-red-500",
-      icon: <HiClock className="text-red-500 animate-pulse text-lg" />,
+      title: "Detail Transaksi",
+      message: "Informasi status pesanan Anda akan muncul di sini.",
+      colorClass: "bg-slate-800/50 border-slate-700 text-slate-400",
+      icon: <HiInformationCircle className="text-slate-500 text-lg" />,
     };
   };
 
@@ -147,17 +182,19 @@ const TransactionDetail = () => {
           {/* LEFT COLUMN: DETAIL PRODUK & PEMBAYARAN */}
           <div className="lg:col-span-7 space-y-6">
             <div className="bg-[#161b22] border border-slate-800 rounded-3xl p-6 space-y-6">
-              <div className="flex items-center gap-4 border-b border-slate-800 pb-6">
+              {/* HEADER: POSTER PRODUK */}
+              <div className="flex items-center gap-5 border-b border-slate-800 pb-6">
                 <img
                   src={data.data.category_image}
-                  className="w-16 h-16 rounded-2xl object-cover"
+                  // UKURAN BARU: w-20 di mobile, w-32 di desktop. Menggunakan rasio 2:3
+                  className="w-20 md:w-32 aspect-[2/3] rounded-2xl object-cover border-2 border-slate-700/50 shadow-2xl flex-shrink-0"
                   alt="game"
                 />
                 <div>
-                  <h3 className="text-white font-bold text-base">
+                  <h3 className="text-white font-black text-lg md:text-2xl uppercase tracking-tighter italic">
                     {data.data.category_name}
                   </h3>
-                  <p className="text-cyan-400 text-sm font-bold">
+                  <p className="text-cyan-400 text-sm md:text-lg font-black">
                     {data.data.product_name}
                   </p>
                 </div>
@@ -165,7 +202,7 @@ const TransactionDetail = () => {
 
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <p className="text-slate-500 text-[10px] font-bold  mb-1">
+                  <p className="text-slate-500 text-[10px] font-bold mb-1">
                     Target Tujuan
                   </p>
                   <p className="text-white font-bold text-sm">
@@ -178,13 +215,12 @@ const TransactionDetail = () => {
                 <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">
                   Pesan
                 </span>
-                {/* Tambahkan break-all agar teks panjang otomatis turun ke bawah */}
                 <p className="text-white font-black text-xs md:text-sm leading-relaxed break-all">
                   {data.data.sn || "-"}
                 </p>
               </div>
 
-              {/* TAMBAHKAN BAGIAN KETERANGAN DI SINI */}
+              {/* KETERANGAN GAGAL */}
               {data?.data?.status === "gagal" &&
                 data?.data?.payment_status === "success" && (
                   <div className="mb-6 pt-4 border-t border-slate-800/50">
@@ -207,18 +243,15 @@ const TransactionDetail = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between text-xs text-slate-400">
                     <span>Harga Produk</span>
-                    {/* Gunakan .price dan tambahkan tanda tanya (?) sebelum titik */}
                     <span>Rp {data?.data?.price?.toLocaleString() || "0"}</span>
                   </div>
                   <div className="flex justify-between text-xs text-slate-400">
                     <span>Biaya Layanan</span>
-                    {/* Gunakan .price dan tambahkan tanda tanya (?) sebelum titik */}
                     <span>Rp {data?.data?.fee?.toLocaleString() || "0"}</span>
                   </div>
 
                   <div className="flex justify-between text-sm text-white font-bold pt-3 border-t border-slate-800/50">
                     <span className="text-cyan-500 uppercase">Total Bayar</span>
-                    {/* Pastikan ini juga menggunakan .price */}
                     <span className="text-xl">
                       Rp {data?.data?.total_price?.toLocaleString() || "0"}
                     </span>
@@ -246,17 +279,27 @@ const TransactionDetail = () => {
                   </span>
                   <span
                     className={`px-4 py-1 rounded-full text-[10px] font-bold uppercase ${
-                      data.data.payment_status === "expire"
-                        ? "bg-red-500/20 text-red-500" // Merah jika kedaluwarsa
-                        : data.data.status === "sukses"
-                          ? "bg-emerald-500/20 text-emerald-500"
-                          : "bg-orange-500/20 text-orange-500"
+                      // 1. PROSES (Sudah Bayar, Produk Antre)
+                      data.data.payment_status === "success" &&
+                      data.data.status === "pending"
+                        ? "bg-cyan-500/20 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
+                        : // 2. CANCEL (Waktu Habis)
+                          data.data.payment_status === "expire"
+                          ? "bg-red-500/20 text-red-500"
+                          : // 3. SUKSES (Produk Terkirim)
+                            data.data.status === "sukses" ||
+                              data.data.status === "success"
+                            ? "bg-emerald-500/20 text-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+                            : // 4. DEFAULT (PENDING)
+                              "bg-orange-500/20 text-orange-500"
                     }`}
                   >
-                    {/* JIKA EXPIRE, TAMPILKAN CANCEL */}
-                    {data.data.payment_status === "expire"
-                      ? "Cancel"
-                      : data.data.status}
+                    {data.data.payment_status === "success" &&
+                    data.data.status === "pending"
+                      ? "Proses"
+                      : data.data.payment_status === "expire"
+                        ? "Cancel"
+                        : data.data.status}
                   </span>
                 </div>
 
@@ -267,31 +310,27 @@ const TransactionDetail = () => {
                   </span>
                   <span
                     className={`px-4 py-1 rounded-full text-[10px] font-bold uppercase ${
+                      // 1. PAID (Pembayaran Diterima)
                       data.data.payment_status === "success"
-                        ? "bg-emerald-500/20 text-emerald-500"
-                        : data.data.payment_status === "expire"
+                        ? "bg-emerald-500/20 text-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+                        : // 2. EXPIRE (Waktu Habis)
+                          data.data.payment_status === "expire"
                           ? "bg-red-500/20 text-red-500"
-                          : data.data.payment_status === "pending"
-                            ? "bg-slate-500/20 text-white"
-                            : "bg-orange-500/20 text-orange-500"
+                          : // 3. WAITING PAYMENT (Belum Bayar)
+                            "bg-slate-500/20 text-white"
                     }`}
                   >
                     {data.data.payment_status === "success"
                       ? "Paid"
                       : data.data.payment_status === "pending"
-                        ? "Wait Payment"
-                        : data.data.payment_status === "expire"
-                          ? "Expired"
-                          : "Unpaid"}
+                        ? "Waiting Payment"
+                        : "Expired"}
                   </span>
                 </div>
               </div>
 
-              {/* CONTAINER UTAMA */}
               <div className="pt-6 border-t border-slate-800/50 flex flex-col w-full">
-                {/* GRUP TOMBOL AKSI */}
                 <div className="w-full flex flex-col gap-3 mb-6">
-                  {/* TOMBOL BAYAR SEKARANG (Hanya jika Pending) */}
                   {data?.data?.payment_status === "pending" && (
                     <button
                       onClick={handleRePay}
@@ -301,7 +340,6 @@ const TransactionDetail = () => {
                     </button>
                   )}
 
-                  {/* TOMBOL KEMBALI */}
                   <Link
                     to="/"
                     className="w-full py-3.5 rounded-2xl bg-slate-800/40 border border-slate-700/50 text-slate-400 font-bold text-xs text-center hover:bg-slate-800 hover:text-white transition-all active:scale-95"
@@ -310,16 +348,13 @@ const TransactionDetail = () => {
                   </Link>
                 </div>
 
-                {/* CATATAN KAKI (FOOTNOTE) */}
                 <div className="px-5 py-5 bg-slate-900/40 rounded-2xl border border-slate-800/60 shadow-inner space-y-4">
                   <div className="flex gap-3 items-start">
                     <HiInformationCircle
                       className="text-orange-500/70 mt-1 shrink-0"
                       size={16}
                     />
-
                     <div className="flex flex-col gap-4 w-full">
-                      {/* Instruksi Pembayaran */}
                       <p className="text-slate-500 text-[10px] md:text-xs leading-relaxed text-left">
                         <span className="text-slate-400 font-bold uppercase text-[9px] block mb-0.5">
                           Instruksi Pembayaran:
@@ -330,7 +365,6 @@ const TransactionDetail = () => {
                         membayar.
                       </p>
 
-                      {/* Catatan Support & Salin Invoice */}
                       <div className="border-t border-slate-800/40 pt-3">
                         <p className="text-slate-500 text-[10px] md:text-xs leading-relaxed text-left mb-4">
                           <span className="text-cyan-500/80 font-bold uppercase text-[9px] block mb-0.5">
@@ -341,7 +375,6 @@ const TransactionDetail = () => {
                           pelanggan kami melalui tombol di bawah ini.
                         </p>
 
-                        {/* Wrapper untuk memastikan tombol rata kiri */}
                         <div className="flex justify-start">
                           <a
                             href={`https://wa.me/6285750231336?text=Halo%20Admin%2C%20saya%20mengalami%20kendala%20pada%20transaksi%20dengan%20Nomor%20Invoice%3A%20${data?.data?.invoice_id}`}

@@ -97,9 +97,9 @@ const OrderDetail = () => {
         const parts = rawNickname.split(" - ");
         cleanNickname = parts[0];
       } else if (rawNickname.includes("Nama:")) {
-      /** * TAMBAHAN: Logika Khusus E-Wallet (DANA/DLL)
-       * Memisahkan string berdasarkan "/" dan menghapus prefix "Nama:"
-       */
+        /** * TAMBAHAN: Logika Khusus E-Wallet (DANA/DLL)
+         * Memisahkan string berdasarkan "/" dan menghapus prefix "Nama:"
+         */
         // Contoh: "Nama:DNID AHMXX RAMXXXXX/Nomor:085..." menjadi "DNID AHMXX RAMXXXXX"
         const parts = rawNickname.split("/");
         cleanNickname = parts[0].replace("Nama:", "").trim();
@@ -277,22 +277,27 @@ const OrderDetail = () => {
         const { snap_token, invoice } = response.data.data; // Pastikan invoice ID diambil dari sini
 
         window.snap.pay(snap_token, {
-          // Callback jika pembayaran berhasil
+          // 1. Sukses Bayar
           onSuccess: (result) => {
-            window.location.replace(`/transaction/${invoice}`);
+            // Gunakan navigate agar tidak reload page penuh
+            navigate(`/transaction/${invoice}`, { replace: true });
           },
-          // Callback jika pembayaran tertunda (misal: sudah dapet kode VA/QRIS tapi belum bayar)
+
+          // 2. Menunggu Pembayaran (VA/QRIS keluar)
           onPending: (result) => {
-            window.location.replace(`/transaction/${invoice}`);
+            navigate(`/transaction/${invoice}`, { replace: true });
           },
-          // Callback jika terjadi error
+
+          // 3. Error Transaksi
           onError: (result) => {
-            window.location.replace(`/transaction/${invoice}`);
+            navigate(`/transaction/${invoice}`, { replace: true });
           },
-          // SOLUSI MOBILE: Jika user menutup Snap atau kembali dari aplikasi GoPay
+
+          // 4. Snap Ditutup atau Kembali dari App DANA
           onClose: () => {
-            // Menggunakan location.replace agar user tidak bisa 'back' ke halaman checkout yang sudah expired
-            window.location.replace(`/transaction/${invoice}`);
+            // Tetap arahkan ke detail agar user bisa lihat status 'Pending'
+            // atau klik tombol 'Bayar Sekarang' lagi
+            navigate(`/transaction/${invoice}`, { replace: true });
           },
         });
       }

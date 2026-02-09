@@ -99,14 +99,14 @@ const History = () => {
               Cari pesanan kamu!
             </h1>
             <p className="text-slate-400 text-[10px] md:text-xs">
-              Lacak transaksi kamu dengan memasukkan Order ID dibawah ini:
+              Lacak transaksi kamu dengan memasukkan Nomor Invoice dibawah ini:
             </p>
           </div>
 
           <form onSubmit={handleSearch} className="space-y-5">
             <div className="space-y-2">
               <label className="text-white font-bold text-[10px] md:text-xs block uppercase tracking-widest opacity-70">
-                Order ID Kamu
+                Nomor Invoice Kamu
               </label>
               <div className="relative group">
                 <input
@@ -142,7 +142,7 @@ const History = () => {
               <thead>
                 <tr className="bg-[#1c232d] text-slate-400 uppercase text-[9px] md:text-[10px] font-black tracking-widest">
                   <th className="px-6 py-5">Tanggal</th>
-                  <th className="px-6 py-5">Order ID</th>
+                  <th className="px-6 py-5">Invoice</th>
                   <th className="px-6 py-5">Produk</th>
                   <th className="px-6 py-5 text-right">Harga</th>
                   <th className="px-6 py-5 text-center">Status</th>

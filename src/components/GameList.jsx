@@ -46,7 +46,7 @@ const GameList = () => {
       ];
 
       // 2. Keyword khusus E-Money (Dompet Digital)
-      const emoneyKeywords = ["dana", "ovo", "gopay", "shopeepay", "linkaja"];
+      const emoneyKeywords = ["dana", "ovo", "go pay", "shopeepay", "linkaja"];
 
       // 3. Keyword khusus Pulsa & Paket Data (Provider)
       const pulsaKeywords = [

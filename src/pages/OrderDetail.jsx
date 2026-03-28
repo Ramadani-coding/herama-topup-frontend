@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   HiLightningBolt,
   HiCheckCircle,
@@ -13,6 +13,7 @@ import api from "../services/api";
 
 const OrderDetail = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
